@@ -149,10 +149,12 @@ export async function labelFlow(req: LabelRequest): Promise<ScanResponse> {
     if (draft.input) input.source = draft.input.source;
     flags = { category: read.category, organic: read.organic, nutrition: read.nutrition, isBeverage: read.isBeverage, isWater: read.isWater, isCheese: read.isCheese, isFatOilNutsSeeds: read.isFatOilNutsSeeds, isRedMeat: read.isRedMeat, hasNonNutritiveSweeteners: read.hasNonNutritiveSweeteners, fruitVegLegumePercent: read.fruitVegLegumePercent, productName: read.productName, brand: read.brand, brandOwner: read.brandOwner };
   } else if (req.nutritionImage) {
-    if (!input || !flags) throw new HttpError(400, "Photograph the ingredient list first.");
+    if (!input) throw new HttpError(400, "Photograph the ingredient list first.");
     const n = await readNutrition(parseImage(req.nutritionImage));
     if (!n) return { status: "unreadable", draftId, problem: "Couldn't read the nutrition facts. Try closer, with more light." };
-    input = { ...input, nutrition: toPer100(n, flags) };
+    // Database products that only lack nutrition have no label flags yet: derive them from the category.
+    const f = flags ?? { category: input.category, organic: input.organic, isBeverage: input.category === "beverage", isWater: input.categoryTags.includes("en:waters") };
+    input = { ...input, nutrition: toPer100(n, f) };
   } else if (!req.skipNutrition) {
     throw new HttpError(400, "Send ingredientsImage, nutritionImage, skipNutrition or useAvailable.");
   }

@@ -31,10 +31,17 @@ export async function alternativesFor(key: string): Promise<{ items: Alternative
   const minScore = minimumScore(result);
   const picked: Alternative[] = [];
   const seenBrands = new Set<string>(input.brand ? [normCompany(input.brand)] : []);
+  let searchFailed = false;
 
   // Most specific category first, then broaden.
   for (const tag of [...tags].reverse().slice(0, 2)) {
-    const hits = await searchCategory(type, tag).catch(() => []);
+    let hits: Awaited<ReturnType<typeof searchCategory>>;
+    try {
+      hits = await searchCategory(type, tag);
+    } catch {
+      searchFailed = true;
+      continue;
+    }
     const scored: (Alternative & { brandKey: string; owner?: string; input: typeof input })[] = [];
     for (const h of hits) {
       if (!h.code || h.code === input.barcode || !h.product_name) continue;
@@ -71,8 +78,10 @@ export async function alternativesFor(key: string): Promise<{ items: Alternative
     if (picked.length >= 5) break;
   }
 
+  if (!picked.length && searchFailed) return { items: [], note: "The product database is busy. Try again in a minute." };
   const out = { items: picked, note: picked.length ? undefined : "No alternative passes both checks yet." };
-  await kvPut("alts", key, out).catch(() => {});
+  // Don't keep an incomplete answer for a week if a search failed.
+  if (!searchFailed) await kvPut("alts", key, out).catch(() => {});
   return out;
 }
 

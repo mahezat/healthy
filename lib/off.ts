@@ -225,8 +225,13 @@ export async function searchCategory(type: string, categoryTag: string, pageSize
   const fields = "code,product_name,brands,brand_owner,image_front_url,nutriscore_score,nutriscore_grade,nutriscore_data,nutriments,additives_tags,labels_tags,ingredients_text,categories_tags,countries_tags";
   const sort = type === "food" ? "&sort_by=nutriscore_score" : "&sort_by=popularity_key";
   const url = `https://${host}/api/v2/search?categories_tags=${encodeURIComponent(categoryTag)}&countries_tags=${encodeURIComponent(config.altCountry)}&page_size=${pageSize}${sort}&fields=${fields}`;
-  const res = await fetch(url, { headers: { "User-Agent": config.userAgent }, signal: AbortSignal.timeout(12000) });
-  if (!res.ok) return [];
+  // Open Food Facts limits search to about 10 requests a minute and answers 503 when busy: retry once.
+  let res = await fetch(url, { headers: { "User-Agent": config.userAgent }, signal: AbortSignal.timeout(12000) });
+  if (res.status === 503 || res.status === 429) {
+    await new Promise((r) => setTimeout(r, 2000));
+    res = await fetch(url, { headers: { "User-Agent": config.userAgent }, signal: AbortSignal.timeout(12000) });
+  }
+  if (!res.ok) throw new Error(`Open Food Facts search returned ${res.status}`);
   const body = (await res.json()) as { products?: SearchHit[] };
   return (body.products ?? []).filter((p) => (p.categories_tags ?? []).includes(categoryTag));
 }

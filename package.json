@@ -7,22 +7,27 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "postinstall": "node scripts/copy-wasm.mjs"
   },
   "dependencies": {
     "@google/genai": "^2.32.0",
     "@neondatabase/serverless": "^1.2.0",
+    "barcode-detector": "^3.2.3",
     "next": "16.4.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.19.2",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "postcss": "^8.5.32",
+    "tailwindcss": "^4.3.3",
     "typescript": "^5",
     "vitest": "^5.0.5"
   }

@@ -31,6 +31,10 @@ Yuka publishes its weights, caps, score ranges and the Nutri-Score table. It doe
 ## Code map
 
 ```
+app/page.tsx       Scan screen (Stitch design)       -> components/scan-screen.tsx
+app/result/        Result screen (Stitch design)     -> components/result-screen.tsx
+app/history/       History (stand-in until designed) -> components/history-screen.tsx
+components/        label photo sheet, passcode sheet, shared rows and buttons
 app/api/*          API routes (see API.md)
 lib/scan.ts        scan flow: barcode, label photo, web, finalize
 lib/score.ts       picks the food or ingredient method
@@ -43,3 +47,5 @@ lib/off.ts         Open Food Facts family
 lib/db.ts          Neon Postgres cache and history
 proxy.ts           passcode lock
 ```
+
+The app name shown in the header is set in `lib/client/format.ts` (`APP_NAME`). Qurova is a demo font (personal use); its digits are watermark glyphs, so numbers use Nunito.
